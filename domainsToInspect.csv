@@ -1,0 +1,101 @@
+domain,bias_rating,ave_m,cred_type
+msn.com,left-center,743000000.0,traditional
+cnn.com,left,535000000.0,traditional
+dailymail.co.uk,right,484020000.0,fake
+foxnews.com,right,391666666.0,traditional
+newsweek.com,right-center,344790000.0,traditional
+worldometers.info,least biased,249370000.0,traditional
+nytimes.com,left-center,243333333.0,traditional
+aol.com,left-center,230666666.0,traditional
+express.co.uk,right,170300000.0,fake
+indiatimes.com,right-center,167133333.0,fake
+infobae.com,left-center,157150000.0,traditional
+elpais.com,left-center,156700000.0,traditional
+usatoday.com,left-center,129133333.0,traditional
+spiegel.de,left-center,127800000.0,traditional
+forbes.com,right-center,108366666.0,traditional
+cnet.com,least biased,106000000.0,traditional
+businessinsider.com,,102533333.0,traditional
+people.com,left,101633333.0,traditional
+cnbc.com,left-center,100900000.0,traditional
+drudgereport.com,right-center,93033333.0,fake
+marketwatch.com,right-center,89330000.0,traditional
+francetvinfo.fr,left-center,85560000.0,traditional
+news.com.au,right-center,82400000.0,traditional
+fool.com,left-center,78960541.0,traditional
+ansa.it,least biased,78490000.0,traditional
+nbcnews.com,left-center,74533333.0,traditional
+npr.org,left-center,71933333.0,traditional
+bloomberg.com,left-center,62900000.0,traditional
+gizmodo.com,left,62500000.0,traditional
+cbsnews.com,left-center,57833333.0,traditional
+breitbart.com,right,57633333.0,fake
+patch.com,least biased,56400000.0,traditional
+thehill.com,least biased,56066666.0,traditional
+abc.net.au,left-center,55233333.0,traditional
+wsj.com,right-center,55166666.0,traditional
+zeit.de,left-center,54490000.0,traditional
+vice.com,left-center,54333333.0,traditional
+reuters.com,least biased,52400000.0,traditional
+nos.nl,right-center,51566666.0,traditional
+worldstarhiphop.com,left,50600000.0,fake
+hindustantimes.com,left-center,50033333.0,fake
+india.com,right-center,46470000.0,traditional
+theverge.com,left-center,45566666.0,traditional
+usnews.com,left-center,45460000.0,traditional
+abcnews.go.com,left-center,44900000.0,traditional
+bleacherreport.com,left-center,44510536.0,traditional
+bustle.com,left-center,43333333.0,traditional
+theatlantic.com,left-center,43166666.0,traditional
+politico.com,left-center,42400000.0,traditional
+investopedia.com,least biased,42033333.0,traditional
+latimes.com,left-center,40366666.0,traditional
+sfgate.com,left-center,40033333.0,traditional
+lastampa.it,left-center,39170000.0,traditional
+firstpost.com,right-center,37033333.0,fake
+stuff.co.nz,left-center,36266666.0,traditional
+engadget.com,left-center,36000000.0,traditional
+news.sky.com,least biased,35566666.0,traditional
+vox.com,left,34600000.0,traditional
+zerohedge.com,right conspiracy/pseudoscience,34500000.0,fake
+dailystar.co.uk,right-center,28210000.0,fake
+economictimes.indiatimes.com,right-center,25360000.0,fake
+washingtonexaminer.com,,22520000.0,fake
+dailywire.com,right,21793333.0,fake
+rawstory.com,left,18426666.0,fake
+dailykos.com,left,16596666.0,fake
+dailycaller.com,right,14410000.0,fake
+thegatewaypundit.com,extreme right,13793333.0,fake
+theepochtimes.com,right,12596666.0,fake
+gulfnews.com,right,12480000.0,fake
+townhall.com,right,11703333.0,fake
+infowars.com,extreme right,10680000.0,fake
+westernjournal.com,far right,10146666.0,fake
+gotquestions.org,right-psuedoscience,10096666.0,fake
+pjmedia.com,right,9790000.0,fake
+bdnews24.com,left-center,9380000.0,fake
+chinadaily.com.cn,left,8626666.0,fake
+theblaze.com,right,8536666.0,fake
+washingtontimes.com,right-center,8420000.0,fake
+newsmax.com,right,7673333.0,fake
+dailytelegraph.com.au,right,7170000.0,fake
+toofab.com,left,5840000.0,fake
+bongino.com,far right,5770000.0,fake
+twitchy.com,right,5160000.0,fake
+americanthinker.com,extreme right,4560000.0,fake
+palmerreport.com,left,4536666.0,fake
+thefederalist.com,right,4263333.0,fake
+www1.cbn.com,right,4110000.0,fake
+godlikeproductions.com,right conspiracy-pseudoscience,3946666.0,fake
+freerepublic.com,right,3603333.0,fake
+lifesitenews.com,right,3576666.0,fake
+theconservativetreehouse.com,extreme right,3530000.0,fake
+wnd.com,extreme right,3526666.0,fake
+redstate.com,right,3510000.0,fake
+democraticunderground.com,left,3493333.0,fake
+swarajyamag.com,right,3443333.0,fake
+republicworld.com,right-center,3396666.0,fake
+babylonbee.com,right-satire,3346666.0,fake
+commondreams.org,left,3033666.0,fake
+greenpeace.org,left-pseudoscience,3005000.0,fake
+grunge.com,left-center,3000000.0,fake
