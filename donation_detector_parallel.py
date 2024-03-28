@@ -7,7 +7,7 @@ import re
 from multiprocessing import Pool
 from functools import partial
 import os
-
+import time
 # Create Chromeoptions instance 
 options = webdriver.ChromeOptions() 
 
@@ -25,7 +25,8 @@ options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option("useAutomationExtension", False) 
 
 donation_keywords = [
-    "donate", "donation", 'supporter', 'support us'
+    "donate", "donation", 'become a supporter', 'support us', 'buy me a coffee', 
+    'give now'
 ]
 import re
 
@@ -49,11 +50,11 @@ def check_elements(elements):
             text = clean_string(element.text.lower())
             href = element.get_attribute("href") or ""
             for keyword in donation_keywords:
-                if len(text.split(' ')) <= 8:
+                if len(text.split(' ')) <= 6 and text != '':
                     if keyword in text or keyword in href:
                         print(f"Donation option found: {text}; {href}")
-                        return True
-    return False
+                        return True, text, href
+    return False, '', ''
 
 def find_donation_option(url):
     print(url)
@@ -67,8 +68,9 @@ def find_donation_option(url):
         for keyword in donation_keywords:
             links = driver.find_elements(By.PARTIAL_LINK_TEXT, keyword)
             buttons = driver.find_elements(By.XPATH, f"//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{keyword}')]")
-            if check_elements(links + buttons):
-                return 1
+            do_found, text, link = check_elements(links + buttons)
+            if do_found:
+                return 1, text, link
 
             iframes = driver.find_elements(By.TAG_NAME, "iframe")
             for i in range(len(iframes)):
@@ -80,24 +82,25 @@ def find_donation_option(url):
                 title = iframe.get_attribute("title") or ""
                 if keyword in title.lower():
                     print(f"Donation option found in iframe title: {title}")
-                    return 1
+                    return 1, title, ''
 
                 driver.switch_to.frame(iframe)
                 clickable_elements = driver.find_elements(By.XPATH, f"//*[contains(@href, '{keyword}') or contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{keyword}')]")
-                if check_elements(clickable_elements):
-                    return 1
+                do_found, text, link = check_elements(clickable_elements)
+                if do_found:
+                    return 1, text, link
                 driver.switch_to.default_content()
 
         print("Donation option not found")
-        return 0
+        return 0, '', ''
 
     except TimeoutException as e:
         print(f"TimeoutException encountered while processing {url}, skipping...")
-        return 'failed'
+        return 'failed', '', ''
     
     except Exception as e:
         print(f"Encountered an error of type {type(e).__name__} while processing {url}, skipping...")
-        return 'failed'
+        return 'failed', '', ''
     
     finally:
         driver.quit()
@@ -106,14 +109,15 @@ def find_donation_option_wrapper(url):
     return (url, find_donation_option(url))
 
 if __name__ == '__main__':
-    start = 0
-    end = 5
+    s = time.time()
+    start = 'start'
+    end = 'end'
     df_domain = pd.read_csv('ideo_domain_mbfc081123_with_weights.tsv', sep='\t')
-    df_domain = df_domain[start: end]
-    print(df_domain)
+    df_domain = df_domain
 
-    with Pool(processes=int(os.cpu_count()/2)) as mp_pool:
+    with Pool(processes=int(10)) as mp_pool:
         results = mp_pool.imap(find_donation_option, list(df_domain['domain']))
-    
-        df_domain['donation'] = list(results)
+        df_domain['donation'], df_domain['content'], df_domain['link'] = zip(*results)
+
     df_domain.to_csv(f'donation_info_{start}_{end}.csv')
+    print(f'time used: {time.time() - s}')
