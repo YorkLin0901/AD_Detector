@@ -107,7 +107,7 @@ def ad_server_analysis(counter):
     uniq_ad_servers = len(counter)
     ad_servers = sum([v for k, v in counter.items()])
     return uniq_ad_servers, ad_servers
-    
+
 def ad_detect(domain):
     num_tries = 0
     time_record = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -132,14 +132,14 @@ def ad_detect(domain):
     return (domain, uniq_ad_servers, ad_servers, time_record, duration)
 
 def process_batch(domains, batch_number):
-    with Pool(processes=10) as mp_pool:
+    with Pool(processes=6) as mp_pool:
         results = mp_pool.imap(ad_detect, domains)
         results = list(results)
 
     batch_file = f'ad_batch/ad_info_batch_{batch_number}.csv'
     with open(batch_file, 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['Domain', 'Unique Ad Servers', 'Ad Servers', 'Time Record', 'Duration'])
+        writer.writerow(['domain','unique_ad_servers','ad_servers','time_recorded','duration'])
         for result in results:
             writer.writerow(result)
     
@@ -148,28 +148,71 @@ def process_batch(domains, batch_number):
 def combine_and_delete_batches(batch_files, final_file):
     with open(final_file, 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['Domain', 'Unique Ad Servers', 'Ad Servers', 'Time Record', 'Duration'])
-
+        writer.writerow(['domain','unique_ad_servers','ad_servers','time_recorded','duration'])
         for batch_file in batch_files:
             with open(batch_file, 'r') as read_file:
                 reader = csv.reader(read_file)
                 next(reader)  # Skip the header row
                 for row in reader:
                     writer.writerow(row)
-            os.remove(batch_file)  # Delete the batch file
 
+def ad_detect_uniq_freq(domain):
+    # this will return domain-ad pair with their freq
+    num_tries = 0
+    time_record = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    while num_tries < PATIENCE:
+        num_tries += 1
+        try:
+            print(domain)
+            counter = ad_url_counter(domain)
+            break
+        except Exception as e:
+            print(f'Try {num_tries} for {domain}: error {e} found when browsing')
+            counter = {}
+
+    # if a domain is not loaded, store in list for further notice
+    if num_tries == PATIENCE:
+        print(f'failed in ad detection for {domain}')
+    
+    return [(domain, uniq_ad_servers, counter[uniq_ad_servers], time_record) for uniq_ad_servers in counter]
+
+def process_uniq_freq_batch(domains, batch_number):
+    outputs = []
+    with Pool(processes=8) as mp_pool:
+        results = mp_pool.imap(ad_detect_uniq_freq, domains)
+        for result in results:
+            outputs.extend(result)
+        
+
+    batch_file = f'ad_freq_batch/ad_info_batch_{batch_number}.csv'
+    with open(batch_file, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['domain','unique_ad_servers','freq','time_recorded'])
+        for output in outputs:
+            writer.writerow(output)
+    
+    return batch_file
+
+def combine_and_delete_batches_uniq_freq(batch_files, final_file):
+    with open(final_file, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['domain','unique_ad_servers','freq','time_recorded'])
+        for batch_file in batch_files:
+            with open(batch_file, 'r') as read_file:
+                reader = csv.reader(read_file)
+                next(reader)  # Skip the header row
+                for row in reader:
+                    writer.writerow(row)
 if __name__ == '__main__':
     domains = list(pd.read_csv('ideo_domain_mbfc081123_with_weights.tsv', sep='\t')['domain'])
-    domains = domains[:10]
-    batch_size = 2
-    batch_files = []
+    domains = domains
+    batch_size = 100
     for i in range(0, len(domains), batch_size):
         batch_number = i // batch_size + 1
         print(f'Processing batch {batch_number}')
-        batch_file = process_batch(domains[i:i + batch_size], batch_number)
-        batch_files.append(batch_file)
-
+        batch_file = process_uniq_freq_batch(domains[i:i + batch_size], batch_number)
+        
     print('Combining batch files into the final CSV file...')
-    combine_and_delete_batches(batch_files, 'ad_info_final.csv')
+    combine_and_delete_batches_uniq_freq(os.listdir('ad_freq_batch'), 'ad_info_freq_final.csv')
 
     print('Analysis complete. The final CSV file is saved.')
