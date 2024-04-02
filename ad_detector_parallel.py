@@ -22,7 +22,7 @@ import time
 
 PATIENCE = 5
 
-ad_domains = {}
+ad_domains = set()
 with open('AdDomainList.txt', 'r') as file:
     while True:
         # read the second line of each two line for redundency
@@ -184,7 +184,7 @@ def ad_detect_uniq_freq(domain):
 
 def process_uniq_freq_batch(domains, batch_number):
     outputs = []
-    with Pool(processes=8) as mp_pool:
+    with Pool(processes=6) as mp_pool:
         results = mp_pool.imap(ad_detect_uniq_freq, domains)
         for result in results:
             outputs.extend(result)
