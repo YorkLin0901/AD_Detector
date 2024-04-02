@@ -9,6 +9,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from collections import Counter
 from multiprocessing import Pool
 from functools import partial
+from urllib.parse import urlparse
+
 import os
 import time
 import re
@@ -20,15 +22,14 @@ import time
 
 PATIENCE = 5
 
-ad_domains = []
-with open('Adblocklist.txt', 'r') as file:
+ad_domains = {}
+with open('AdDomainList.txt', 'r') as file:
     while True:
         # read the second line of each two line for redundency
         ad_domain = file.readline()
         if not ad_domain:
             break
-        ad_domain = file.readline()
-        ad_domains.append(ad_domain.strip())
+        ad_domains.add(ad_domain.strip())
 
 # Create Chromeoptions instance 
 options = webdriver.ChromeOptions() 
@@ -86,11 +87,16 @@ def dynamic_content_extractor(url):
     return dynamic_content
 
 def ad_url_check(dynamic_url):
-    for ad_domain in ad_domains:
-        regex_pattern = '.*' + ad_domain.replace('*', '.*').replace('.', r'\.') + '.*'
-        if re.match(regex_pattern, dynamic_url):
-            return True, ad_domain
+    parsed_domain = urlparse(dynamic_url).netloc
+
+    domain_parts = parsed_domain.split('.')
+    for i in range(len(domain_parts)):
+        subdomain = '.'.join(domain_parts[i:])
+        if subdomain in ad_domains:
+            return True, subdomain
+
     return False, None
+
 
 # return counter of ad servers
 def ad_url_counter(url):
@@ -213,6 +219,7 @@ if __name__ == '__main__':
         batch_file = process_uniq_freq_batch(domains[i:i + batch_size], batch_number)
         
     print('Combining batch files into the final CSV file...')
-    combine_and_delete_batches_uniq_freq(os.listdir('ad_freq_batch'), 'ad_info_freq_final.csv')
+    filenames = ['ad_freq_batch/' + name for name in os.listdir('ad_freq_batch')]
+    combine_and_delete_batches_uniq_freq(filenames, 'ad_info_freq_final.csv')
 
     print('Analysis complete. The final CSV file is saved.')
