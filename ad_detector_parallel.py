@@ -23,7 +23,7 @@ import time
 PATIENCE = 5
 
 ad_domains = set()
-with open('AdDomainList.txt', 'r') as file:
+with open('adDomainList.txt', 'r') as file:
     while True:
         # read the second line of each two line for redundency
         ad_domain = file.readline()
