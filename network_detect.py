@@ -243,9 +243,10 @@ if __name__ == '__main__':
                 proxy_list.remove(proxy_ip)
             else:
                 break
-
+        if proxy_list == ['']:
+            num_pause = 25
         if not i % num_pause:
-            time.sleep()
+            time.sleep(7200)
 
         if not proxy_list:
             print(f'proxy down at website {i}: {domain}')
