@@ -24,6 +24,8 @@ import re
 import csv
 from fake_useragent import UserAgent
 from selenium.webdriver.common.proxy import Proxy, ProxyType
+import string
+import zipfile
 
 ua = UserAgent()
 
@@ -36,40 +38,129 @@ user_agents = [
     # ua.ie
 ]
 
-proxy_list = ['']
+proxy_list = [
+'cbxaaynd:9gck0pt7939y@38.154.227.167:5868',
+'cbxaaynd:9gck0pt7939y@185.199.229.156:7492',
+'cbxaaynd:9gck0pt7939y@185.199.228.220:7300',
+'cbxaaynd:9gck0pt7939y@185.199.231.45:8382',
+'cbxaaynd:9gck0pt7939y@188.74.210.207:6286',
+'cbxaaynd:9gck0pt7939y@188.74.183.10:8279',
+'cbxaaynd:9gck0pt7939y@188.74.210.21:6100',
+'cbxaaynd:9gck0pt7939y@45.155.68.129:8133',
+'cbxaaynd:9gck0pt7939y@154.95.36.199:6893',
+'cbxaaynd:9gck0pt7939y@45.94.47.66:8110',
+''
+]
+def create_proxy_auth_extension(proxy_host, proxy_port, proxy_username, proxy_password, scheme='http',
+                                plugin_path=None):
+    if plugin_path is None:
+        plugin_path = r'{}_{}@http-dyn.dobel.com_9020.zip'.format(proxy_username, proxy_password)
+
+    manifest_json = """
+    {
+        "version": "1.0.0",
+        "manifest_version": 2,
+        "name": "Dobel Proxy",
+        "permissions": [
+            "proxy",
+            "tabs",
+            "unlimitedStorage",
+            "storage",
+            "<all_urls>",
+            "webRequest",
+            "webRequestBlocking"
+        ],
+        "background": {
+            "scripts": ["background.js"]
+        },
+        "minimum_chrome_version":"22.0.0"
+    }
+    """
+
+    background_js = string.Template(
+        """
+        var config = {
+            mode: "fixed_servers",
+            rules: {
+                singleProxy: {
+                    scheme: "${scheme}",
+                    host: "${host}",
+                    port: parseInt(${port})
+                },
+                bypassList: ["foobar.com"]
+            }
+          };
+
+        chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
+
+        function callbackFn(details) {
+            return {
+                authCredentials: {
+                    username: "${username}",
+                    password: "${password}"
+                }
+            };
+        }
+
+        chrome.webRequest.onAuthRequired.addListener(
+            callbackFn,
+            {urls: ["<all_urls>"]},
+            ['blocking']
+        );
+        """
+    ).substitute(
+        host=proxy_host,
+        port=proxy_port,
+        username=proxy_username,
+        password=proxy_password,
+        scheme=scheme,
+    )
+
+    with zipfile.ZipFile(plugin_path, 'w') as zp:
+        zp.writestr("manifest.json", manifest_json)
+        zp.writestr("background.js", background_js)
+
+    return plugin_path
+
+
+def from_proxy_get_daili(proxy):
+    # proxy是这种格式 user:pass@ip:port
+    user_pass_str, ip_port_str = proxy.split('@')
+    proxyHost, proxyPort = ip_port_str.split(':')
+    proxyUser, proxyPass = user_pass_str.split(':')
+    return proxyHost, proxyPort, proxyUser, proxyPass
+
 
 def init_driver():
-    proxy_ip = random.choice(proxy_list)
-    options = webdriver.ChromeOptions() 
+    options = webdriver.ChromeOptions()
+
+    proxy = random.choice(proxy_list)
+    if '@' in proxy:
+        proxyHost, proxyPort, proxyUser, proxyPass = from_proxy_get_daili(proxy)
+        proxy_auth_plugin_path = create_proxy_auth_extension(
+            proxy_host=proxyHost,
+            proxy_port=proxyPort,
+            proxy_username=proxyUser,
+            proxy_password=proxyPass)
+        options.add_extension(proxy_auth_plugin_path)
+    else:
+        options.add_argument(f'--proxy-server={proxy}')
+        
     random_user_agent = random.choice(user_agents)
     options.add_argument(f'user-agent={random_user_agent}')
-    options.add_argument(f'--proxy-server={proxy_ip}')
     options.add_argument("--disable-blink-features=AutomationControlled") 
     options.add_argument("--use_subprocess")
     # options.add_argument('--headless')  
     options.add_argument("--incognito")
-    driver = webdriver.Chrome(options=options)  
-    return driver, proxy_ip
-# Open the webpage
-def get_file_num(domain):
-    driver, proxy_ip = init_driver()
-    driver.get(f"https://projects.propublica.org/nonprofits/full_text_search?sort=best&year%5B%5D=2022&year%5B%5D=2021&year%5B%5D=2020&q={domain}&submit=Apply")
-    # Locate the input element (replace 'input_id' with the actual ID of the text box)
-    print(domain, end=' ')
-    ran_time = random.randint(0,5)
-    time.sleep(ran_time)
-
-    try:
-        element = driver.find_element(By.XPATH, '//*[@id="search-tabs"]/div[3]/span[2]')
-        print(element.text)
-    except Exception as e:
-        print(0)
-        print(f'error found: {e}')
+    driver = webdriver.Chrome(options=options)
+    return driver, proxy
 
 # Open the webpage
 def get_pair(domain, result, spec_set):
     # spec_set is used to record those with results more than one page   
     driver, proxy_ip = init_driver()
+    if not driver:
+        return 'fail', proxy_ip
     driver.get(f"https://projects.propublica.org/nonprofits/full_text_search?sort=best&year%5B%5D=2022&year%5B%5D=2021&year%5B%5D=2020&q={domain}&submit=Apply")
     print(domain, end=' ')
     ran_time = random.randint(0,5)
@@ -140,6 +231,7 @@ def get_pair(domain, result, spec_set):
 
 if __name__ == '__main__':
     df = pd.read_csv('donation_info_adj.csv')
+    num_pause = 150
     domain_type = 'conspiracy'
     domains = df[(df['category']==domain_type)&(df['donation_adj']=='1')].sort_values(by=['ave_m'], ascending=True)['domain']
     result = []
@@ -151,6 +243,10 @@ if __name__ == '__main__':
                 proxy_list.remove(proxy_ip)
             else:
                 break
+
+        if not i % num_pause:
+            time.sleep()
+
         if not proxy_list:
             print(f'proxy down at website {i}: {domain}')
             break
