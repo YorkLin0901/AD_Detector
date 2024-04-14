@@ -239,14 +239,17 @@ if __name__ == '__main__':
     for i, domain in enumerate(domains):
         while proxy_list:
             status, proxy_ip = get_pair(domain, result, spec_set)
+
+            # pause after couple of visits
+            if proxy_list == ['']:
+                num_pause = 25
+            if not i % num_pause:
+                time.sleep(7200)
+
             if status == 'failed':
                 proxy_list.remove(proxy_ip)
             else:
                 break
-        if proxy_list == ['']:
-            num_pause = 25
-        if not i % num_pause:
-            time.sleep(7200)
 
         if not proxy_list:
             print(f'proxy down at website {i}: {domain}')
